@@ -44,6 +44,9 @@ class NewsPublicationServiceTest extends CommonAbstractTest {
     private AccountRepository accountRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
@@ -53,6 +56,8 @@ class NewsPublicationServiceTest extends CommonAbstractTest {
         jdbcTemplate.execute("ALTER SEQUENCE publication_pk_seq RESTART");
         accountRepository.deleteAll();
         jdbcTemplate.execute("ALTER SEQUENCE account_pk_seq RESTART");
+        roleRepository.deleteAll();
+        jdbcTemplate.execute("ALTER SEQUENCE role_pk_seq RESTART");
     }
 
     @DisplayName("Find all publications in news")
@@ -76,6 +81,7 @@ class NewsPublicationServiceTest extends CommonAbstractTest {
     }
 
     private void createBeforeStart() throws RoleNotFoundException {
+        insertRoles();
         accountRepository.save(new Account(null, "dan@dam.ru", "1234", "Daniil K", null, null, null, null, null, false, roleService.getRoleByName(Role.ROLE_USER), null, null, null));
     }
 
@@ -88,5 +94,15 @@ class NewsPublicationServiceTest extends CommonAbstractTest {
 
         savedPublication = publicationRepository.save(new PublicationEntity(null, "Третья публикация", "Third",null, true,  null, accountRepository.findById(1L).get(), null, null, null));
         newsPublicationRepository.save(new NewsPublicationEntity(savedPublication.getId(), savedPublication));
+    }
+
+    private void insertRoles() {
+        Role[] roles = Role.values();
+        for (Role role : roles) {
+            if (!roleService.roleExists(role)) {
+                RoleEntity roleEntity = new RoleEntity(null, role, null);
+                roleService.save(roleEntity);
+            }
+        }
     }
 }

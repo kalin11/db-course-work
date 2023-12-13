@@ -48,6 +48,9 @@ class PublicationEntityServiceTest extends CommonAbstractTest {
     private AccountRepository accountRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
@@ -61,6 +64,8 @@ class PublicationEntityServiceTest extends CommonAbstractTest {
         jdbcTemplate.execute("ALTER SEQUENCE subject_pk_seq RESTART");
         accountRepository.deleteAll();
         jdbcTemplate.execute("ALTER SEQUENCE account_pk_seq RESTART");
+        roleRepository.deleteAll();
+        jdbcTemplate.execute("ALTER SEQUENCE role_pk_seq RESTART");
     }
 
     @DisplayName("Find all publications in one category")
@@ -120,6 +125,7 @@ class PublicationEntityServiceTest extends CommonAbstractTest {
     }
 
     private void createBeforeStart() throws RoleNotFoundException {
+        insertRoles();
         subjectRepository.save(new SubjectEntity(null, "Mathematics", null, courseRepository.findById(1).get()));
         subjectTopicRepository.save(new SubjectTopicEntity(null, topicRepository.findById(1L).get(), subjectRepository.findById(1L).get()));
         accountRepository.save(new Account(null, "dan@dam.ru", "1234", "Daniil K", null, null, null, null, null, false, roleService.getRoleByName(Role.ROLE_USER), null, null, null));
@@ -131,5 +137,15 @@ class PublicationEntityServiceTest extends CommonAbstractTest {
         publicationRepository.save(new PublicationEntity(null, "Первая публикация", "First", null, false,  null, accountRepository.findById(1L).get(), null, set, null));
         publicationRepository.save(new PublicationEntity(null, "Вторая публикация", "Second",null, false,  null, accountRepository.findById(1L).get(), null, set, null));
         publicationRepository.save(new PublicationEntity(null, "Третья публикация", "Third",null, false,  null, accountRepository.findById(1L).get(), null, set, null));
+    }
+
+    private void insertRoles() {
+        Role[] roles = Role.values();
+        for (Role role : roles) {
+            if (!roleService.roleExists(role)) {
+                RoleEntity roleEntity = new RoleEntity(null, role, null);
+                roleService.save(roleEntity);
+            }
+        }
     }
 }
